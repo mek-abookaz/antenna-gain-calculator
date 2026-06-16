@@ -135,7 +135,19 @@ LOCALES = {
         
         # Alerts/Errors
         "value_error": "الرجاء التأكد من إدخال قيم موجبة أكبر من الصفر للمسافة والتردد.",
-        "power_warning": "القدرة المستقبلة يجب أن تكون منطقياً أقل من القدرة المرسلة في الفضاء الحر."
+        "power_warning": "القدرة المستقبلة يجب أن تكون منطقياً أقل من القدرة المرسلة في الفضاء الحر.",
+        "input_mode_label": "طريقة إدخال الفقد/الإشارة",
+        "input_mode_power": "القدرة وخسائر الكابلات (Power & Cable Losses)",
+        "input_mode_s": "معامل S21 المباشر من الـ VNA",
+        "s21_label": "معامل الانتقال S21 (dB)",
+        "mismatch_toggle": "تضمين تصحيح الفقد الناتج عن عدم موائمة المقاومة (S11 / S22)",
+        "s11_label": "معامل الانعكاس للمنفذ 1 (S11 بالديسيبل)",
+        "s22_label": "معامل الانعكاس للمنفذ 2 (S22 بالديسيبل)",
+        "realized_gain_label": "الكسب الفعلي (Realized Gain)",
+        "intrinsic_gain_label": "الكسب الصافي (Intrinsic Gain)",
+        "mismatch_loss_result": "فقد عدم الموائمة للمنفذ",
+        "total_mismatch_loss": "إجمالي فقد عدم الموائمة",
+        "s11_error": "معاملات الانعكاس (S11/S22) يجب أن تكون قيمًا سالبة تمامًا (مثال: -10 dB)."
     },
     "en": {
         "title": "📡 Smart Antenna Gain Calculator",
@@ -195,7 +207,19 @@ LOCALES = {
         
         # Alerts/Errors
         "value_error": "Please ensure distance and frequency are positive values greater than zero.",
-        "power_warning": "Received power should theoretically be lower than transmitted power in passive free space."
+        "power_warning": "Received power should theoretically be lower than transmitted power in passive free space.",
+        "input_mode_label": "Transmission Input Mode",
+        "input_mode_power": "Power & Cable Losses",
+        "input_mode_s": "Direct S21 Parameter from VNA",
+        "s21_label": "Transmission Coefficient S21 (dB)",
+        "mismatch_toggle": "Include Mismatch Loss Correction (S11 / S22)",
+        "s11_label": "Port 1 Reflection Coefficient (S11 in dB)",
+        "s22_label": "Port 2 Reflection Coefficient (S22 in dB)",
+        "realized_gain_label": "Realized Gain",
+        "intrinsic_gain_label": "Intrinsic Gain (Saf Gain)",
+        "mismatch_loss_result": "Mismatch Loss for Port",
+        "total_mismatch_loss": "Total Mismatch Loss",
+        "s11_error": "Reflection coefficients (S11/S22) must be strictly negative values (e.g. -10 dB)."
     },
     "tr": {
         "title": "📡 Akıllı Anten Kazancı Hesaplayıcı",
@@ -255,7 +279,19 @@ LOCALES = {
         
         # Alerts/Errors
         "value_error": "Lütfen mesafe ve frekans için sıfırdan büyük pozitif değerler girdiğinizden emin olun.",
-        "power_warning": "Alınan güç, pasif serbest uzayda teorik olarak iletilen güçten daha düşük olmalıdır."
+        "power_warning": "Alınan güç, pasif serbest uzayda teorik olarak iletilen güçten daha düşük olmalıdır.",
+        "input_mode_label": "İletim Giriş Yöntemi",
+        "input_mode_power": "Güç ve Kablo Kayıpları (Power & Cable Losses)",
+        "input_mode_s": "VNA'dan Doğrudan S21 Parametresi",
+        "s21_label": "İletim Katsayısı S21 (dB)",
+        "mismatch_toggle": "Empedans Uyumsuzluk Kaybı Düzeltmesini Ekle (S11 / S22)",
+        "s11_label": "Port 1 Yansıma Katsayısı (S11 in dB)",
+        "s22_label": "Port 2 Yansıma Katsayısı (S22 in dB)",
+        "realized_gain_label": "Gerçekleşen Kazanç (Realized Gain)",
+        "intrinsic_gain_label": "Saf Kazanç (Intrinsic Gain)",
+        "mismatch_loss_result": "Port için Uyumsuzluk Kaybı",
+        "total_mismatch_loss": "Toplam Uyumsuzluk Kaybı",
+        "s11_error": "Yansıma katsayıları (S11/S22) sıfırdan küçük negatif değerler olmalıdır (Örn: -10 dB)."
     }
 }
 
@@ -409,19 +445,46 @@ if method == "2ant":
         d_val = st.number_input(f"{T['dist']}", min_value=0.001, value=5.0, step=0.5, format="%.3f", key="2ant_d")
         d_unit = st.selectbox("Distance Unit", ["Meters (m)", "Feet (ft)", "Kilometers (km)", "Miles (mi)"], key="2ant_d_unit")
         
-        # Transmitted Power
-        pt_val = st.number_input(f"{T['pt']}", value=1.0, step=0.1, key="2ant_pt")
-        pt_unit = st.selectbox("Pt Unit", ["W", "mW", "dBm", "dBW"], key="2ant_pt_unit")
+        # Input mode select (Power & Cable Losses vs Direct S21)
+        input_mode = st.radio(
+            T["input_mode_label"],
+            ["power", "s21"],
+            format_func=lambda x: T["input_mode_power"] if x == "power" else T["input_mode_s"],
+            key="2ant_input_mode"
+        )
         
-        # Received Power
-        pr_val = st.number_input(f"{T['pr']}", value=-45.0, step=1.0, key="2ant_pr")
-        pr_unit = st.selectbox("Pr Unit", ["dBm", "dBW", "mW", "W"], key="2ant_pr_unit")
+        pt_val, pt_unit, pr_val, pr_unit = 1.0, "W", -45.0, "dBm"
+        lt_val, lr_val = 0.0, 0.0
+        s21_val = -26.08
         
-        # Cable Losses
-        with st.expander(T["cable_losses"]):
-            lt_val = st.number_input(f"{T['lt']}", min_value=0.0, value=0.0, step=0.1, key="2ant_lt")
-            lr_val = st.number_input(f"{T['lr']}", min_value=0.0, value=0.0, step=0.1, key="2ant_lr")
+        if input_mode == "power":
+            # Transmitted Power
+            pt_val = st.number_input(f"{T['pt']}", value=1.0, step=0.1, key="2ant_pt")
+            pt_unit = st.selectbox("Pt Unit", ["W", "mW", "dBm", "dBW"], key="2ant_pt_unit")
             
+            # Received Power
+            pr_val = st.number_input(f"{T['pr']}", value=-45.0, step=1.0, key="2ant_pr")
+            pr_unit = st.selectbox("Pr Unit", ["dBm", "dBW", "mW", "W"], key="2ant_pr_unit")
+            
+            # Cable Losses
+            with st.expander(T["cable_losses"]):
+                lt_val = st.number_input(f"{T['lt']}", min_value=0.0, value=0.0, step=0.1, key="2ant_lt")
+                lr_val = st.number_input(f"{T['lr']}", min_value=0.0, value=0.0, step=0.1, key="2ant_lr")
+        else:
+            s21_val = st.number_input(f"{T['s21_label']}", value=-26.08, step=1.0, format="%.2f", key="2ant_s21")
+            
+        st.markdown("<hr style='border: 0.5px solid rgba(139,92,246,0.2)'/>", unsafe_allow_html=True)
+        include_mismatch = st.checkbox(T["mismatch_toggle"], value=False, key="2ant_mismatch_toggle")
+        
+        s11_val = -10.0
+        s22_val = -10.0
+        if include_mismatch:
+            col_m1, col_m2 = st.columns(2)
+            with col_m1:
+                s11_val = st.number_input(T["s11_label"], min_value=-100.0, max_value=-0.01, value=-10.0, step=0.5, format="%.2f", key="2ant_s11")
+            with col_m2:
+                s22_val = st.number_input(T["s22_label"], min_value=-100.0, max_value=-0.01, value=-10.0, step=0.5, format="%.2f", key="2ant_s22")
+                
         st.markdown("</div>", unsafe_allow_html=True)
         
     with col2:
@@ -430,59 +493,150 @@ if method == "2ant":
         # Convert Units
         f_hz = convert_freq_to_hz(f_val, f_unit)
         d_m = convert_dist_to_meters(d_val, d_unit)
-        pt_dbm = convert_power_to_dbm(pt_val, pt_unit)
-        pr_dbm = convert_power_to_dbm(pr_val, pr_unit)
         
         wavelength = SPEED_OF_LIGHT / f_hz
         
         if f_hz <= 0 or d_m <= 0:
             st.error(T["value_error"])
         else:
-            if pr_dbm >= pt_dbm:
-                st.warning(T["power_warning"])
+            # Determine S21 based on input mode
+            if input_mode == "power":
+                pt_dbm = convert_power_to_dbm(pt_val, pt_unit)
+                pr_dbm = convert_power_to_dbm(pr_val, pr_unit)
+                if pr_dbm >= pt_dbm:
+                    st.warning(T["power_warning"])
+                s21_calc = pr_dbm - pt_dbm + lt_val + lr_val
+            else:
+                s21_calc = s21_val
+                pt_dbm = 0.0
+                pr_dbm = 0.0
                 
             fspl = calculate_fspl(f_hz, d_m)
             
-            # Gain calculation: G = (Pr - Pt + FSPL + Lt + Lr) / 2
-            g_dBi = (pr_dbm - pt_dbm + fspl + lt_val + lr_val) / 2.0
+            # Mismatch Loss calculation
+            if include_mismatch:
+                m1 = 10.0 * np.log10(1.0 - 10.0**(s11_val / 10.0))
+                m2 = 10.0 * np.log10(1.0 - 10.0**(s22_val / 10.0))
+                m_total = m1 + m2
+            else:
+                m1 = 0.0
+                m2 = 0.0
+                m_total = 0.0
+                
+            # Gain calculation
+            g_realized = (s21_calc + fspl) / 2.0
+            g_intrinsic = (s21_calc + fspl - m1 - m2) / 2.0
             
-            # Visual result card
-            st.markdown(f"""
-            <div style="text-align: center; padding: 10px; background: rgba(139,92,246,0.1); border-radius: 12px; margin-bottom: 20px; border: 1px dashed rgba(139,92,246,0.4)">
-                <span style="font-size: 1.1rem; color: #A78BFA;">{T['gain_result']}</span>
-                <div class="result-value">{g_dBi:.3f} dBi</div>
-            </div>
-            """, unsafe_allow_html=True)
+            # Visual result cards
+            if include_mismatch:
+                col_g1, col_g2 = st.columns(2)
+                with col_g1:
+                    st.markdown(f"""
+                    <div style="text-align: center; padding: 10px; background: rgba(96,165,250,0.1); border-radius: 12px; margin-bottom: 20px; border: 1px dashed rgba(96,165,250,0.4)">
+                        <span style="font-size: 1.0rem; color: #60A5FA;">{T['realized_gain_label']}</span>
+                        <div class="result-value" style="font-size: 2.2rem; background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{g_realized:.3f} dBi</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col_g2:
+                    st.markdown(f"""
+                    <div style="text-align: center; padding: 10px; background: rgba(52,211,153,0.1); border-radius: 12px; margin-bottom: 20px; border: 1px dashed rgba(52,211,153,0.4)">
+                        <span style="font-size: 1.0rem; color: #34D399;">{T['intrinsic_gain_label']}</span>
+                        <div class="result-value" style="font-size: 2.2rem; background: linear-gradient(135deg, #34D399 0%, #10B981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{g_intrinsic:.3f} dBi</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="text-align: center; padding: 10px; background: rgba(139,92,246,0.1); border-radius: 12px; margin-bottom: 20px; border: 1px dashed rgba(139,92,246,0.4)">
+                    <span style="font-size: 1.1rem; color: #A78BFA;">{T['gain_result']}</span>
+                    <div class="result-value">{g_realized:.3f} dBi</div>
+                </div>
+                """, unsafe_allow_html=True)
             
             # Wavelength and Path loss info
             col_res1, col_res2 = st.columns(2)
             col_res1.metric(T["wavelength"], f"{wavelength:.5f} m")
             col_res2.metric(T["fspl_calc"], f"{fspl:.2f} dB")
             
+            if include_mismatch:
+                col_m_res1, col_m_res2, col_m_res3 = st.columns(3)
+                col_m_res1.metric(f"M1 ({T['mismatch_loss_result']} 1)", f"{m1:.3f} dB")
+                col_m_res2.metric(f"M2 ({T['mismatch_loss_result']} 2)", f"{m2:.3f} dB")
+                col_m_res3.metric(T["total_mismatch_loss"], f"{m_total:.3f} dB")
+            
             # Connections diagram
             st.markdown(f"<h5>{T['diagram_title']}</h5>", unsafe_allow_html=True)
-            svg_html = draw_svg_setup(f"{f_val} {f_unit}", f"{d_val} {d_unit.split()[0]}", fspl, f"{g_dBi:.2f} dBi", f"{g_dBi:.2f} dBi", lt_val, lr_val)
+            if include_mismatch:
+                g_tx_str = f"R:{g_realized:.2f} / I:{g_intrinsic:.2f}"
+                g_rx_str = f"R:{g_realized:.2f} / I:{g_intrinsic:.2f}"
+                if input_mode == "power":
+                    loss_t_str = f"{lt_val:.1f} (S11:{s11_val:.1f})"
+                    loss_r_str = f"{lr_val:.1f} (S22:{s22_val:.1f})"
+                else:
+                    loss_t_str = f"0.0 (S11:{s11_val:.1f})"
+                    loss_r_str = f"0.0 (S22:{s22_val:.1f})"
+            else:
+                g_tx_str = f"{g_realized:.2f} dBi"
+                g_rx_str = f"{g_realized:.2f} dBi"
+                if input_mode == "power":
+                    loss_t_str = f"{lt_val:.1f}"
+                    loss_r_str = f"{lr_val:.1f}"
+                else:
+                    loss_t_str = "0.0"
+                    loss_r_str = "0.0"
+                    
+            svg_html = draw_svg_setup(f"{f_val} {f_unit}", f"{d_val} {d_unit.split()[0]}", fspl, g_tx_str, g_rx_str, loss_t_str, loss_r_str)
             st.components.v1.html(svg_html, height=190)
             
             # Mathematical Breakdown
             with st.expander(T["math_steps"]):
+                mismatch_math_str = ""
+                if include_mismatch:
+                    mismatch_math_str = f"""
+                **4. Calculate Mismatch Loss (ML) from S11 and S22:**
+                - Port 1 Mismatch Loss ($M_1$):
+                  $$M_1 = 10 \\log_{{10}}\\left(1 - 10^{{\\frac{{S_{{11}}}}{{10}}}}\\right) = 10 \\log_{{10}}\\left(1 - 10^{{\\frac{{{s11_val:.3f}}}{{10}}}}\\right) = {m1:.3f}\\text{{ dB}}$$
+                - Port 2 Mismatch Loss ($M_2$):
+                  $$M_2 = 10 \\log_{{10}}\\left(1 - 10^{{\\frac{{S_{{22}}}}{{10}}}}\\right) = 10 \\log_{{10}}\\left(1 - 10^{{\\frac{{{s22_val:.3f}}}{{10}}}}\\right) = {m2:.3f}\\text{{ dB}}$$
+                - Total Mismatch Loss:
+                  $$M_{{total}} = M_1 + M_2 = {m1:.3f} + ({m2:.3f}) = {m_total:.3f}\\text{{ dB}}$$
+                
+                **5. Calculate Intrinsic Gain (Corrected for Mismatch Losses):**
+                $$S_{{21}} = G_{{tx(int)}} + G_{{rx(int)}} + M_1 + M_2 - FSPL$$
+                Assuming identical antennas ($G_{{tx(int)}} = G_{{rx(int)}} = G_{{intrinsic}}$):
+                $$2G_{{intrinsic}} = S_{{21}} + FSPL - M_1 - M_2$$
+                $$G_{{intrinsic}} = \\frac{{{s21_calc:.3f} + {fspl:.3f} - ({m1:.3f}) - ({m2:.3f})}}{{2}} = {g_intrinsic:.3f}\\text{{ dBi}}$$
+                    """
+                
+                s21_formula_str = ""
+                if input_mode == "power":
+                    s21_formula_str = f"""
+                - Transmitted Power ($P_t$): {pt_val} {pt_unit} $\\rightarrow$ {pt_dbm:.2f} dBm
+                - Received Power ($P_r$): {pr_val} {pr_unit} $\\rightarrow$ {pr_dbm:.2f} dBm
+                - Tx Cable Loss ($L_t$): {lt_val:.2f} dB, Rx Cable Loss ($L_r$): {lr_val:.2f} dB
+                - Transmission Coefficient ($S_{{21}}$):
+                  $$S_{{21}} = P_r - P_t + L_t + L_r = {pr_dbm:.2f} - ({pt_dbm:.2f}) + {lt_val:.2f} + {lr_val:.2f} = {s21_calc:.3f}\\text{{ dB}}$$
+                    """
+                else:
+                    s21_formula_str = f"""
+                - Transmission Coefficient ($S_{{21}}$): {s21_calc:.2f} dB (Direct Input)
+                    """
+                    
                 st.markdown(f"""
                 **1. Convert all units to standard values:**
                 - Frequency ($f$): {f_val} {f_unit} $\\rightarrow$ {f_hz:,.1f} Hz
                 - Wavelength ($\\lambda = c/f$): ${SPEED_OF_LIGHT} / {f_hz:,.1f} = {wavelength:.6f}$ m
-                - Distance ($d$): {d_val} {d_unit} $\\rightarrow$ {d_m:.3f} m
-                - Transmitted Power ($P_t$): {pt_val} {pt_unit} $\\rightarrow$ {pt_dbm:.2f} dBm
-                - Received Power ($P_r$): {pr_val} {pr_unit} $\\rightarrow$ {pr_dbm:.2f} dBm
+                - Distance ($R$): {d_val} {d_unit} $\\rightarrow$ {d_m:.3f} m
+                {s21_formula_str}
                 
                 **2. Calculate Free Space Path Loss (FSPL):**
-                $$FSPL = 20 \\log_{{10}}\\left(\\frac{{4 \\pi d}}{{\\lambda}}\\right) = 20 \\log_{{10}}\\left(\\frac{{4 \\pi \\times {d_m:.3f}}}{{{wavelength:.6f}}}\\right) = {fspl:.3f}\\text{{ dB}}$$
+                $$FSPL = 20 \\log_{{10}}\\left(\\frac{{4 \\pi R}}{{\\lambda}}\\right) = 20 \\log_{{10}}\\left(\\frac{{4 \\pi \\times {d_m:.3f}}}{{{wavelength:.6f}}}\\right) = {fspl:.3f}\\text{{ dB}}$$
                 
-                **3. Apply Friis Equation for Identical Antennas ($G_t = G_r = G$):**
-                $$P_r = P_t + G_t + G_r - FSPL - L_t - L_r$$
-                $$P_r = P_t + 2G - FSPL - L_t - L_r$$
-                $$2G = P_r - P_t + FSPL + L_t + L_r$$
-                $$G = \\frac{{{pr_dbm:.2f} - ({pt_dbm:.2f}) + {fspl:.2f} + {lt_val:.2f} + {lr_val:.2f}}}{{2}}$$
-                $$G = \\frac{{{pr_dbm - pt_dbm + fspl + lt_val + lr_val:.3f}}}{{2}} = {g_dBi:.3f}\\text{{ dBi}}$$
+                **3. Calculate Realized Gain (Including Mismatch Losses):**
+                $$S_{{21}} = G_{{tx(real)}} + G_{{rx(real)}} - FSPL$$
+                Assuming identical antennas ($G_{{tx(real)}} = G_{{rx(real)}} = G_{{realized}}$):
+                $$2G_{{realized}} = S_{{21}} + FSPL$$
+                $$G_{{realized}} = \\frac{{{s21_calc:.3f} + {fspl:.3f}}}{{2}} = {g_realized:.3f}\\text{{ dBi}}$$
+                {mismatch_math_str}
                 """)
                 
         st.markdown("</div>", unsafe_allow_html=True)
